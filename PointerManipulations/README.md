@@ -104,3 +104,56 @@
       ```c
       const int *const ptr;
       ```
+---
+# Dynamic Array Library
+
+This Dynamic Array Library provides a simple implementation of a dynamically resizable array in C. It supports storing elements of any data type and offers basic operations like adding, removing, and accessing elements.
+
+## Features
+
+- Dynamic resizing
+- Generic data type support
+- Basic operations: add, remove, and get elements
+- Memory management
+
+## Function Descriptions
+
+### `DynamicArray* initArray(size_t element_size, size_t capacity)`
+
+Initializes a dynamic array with a specified element size and initial capacity.
+
+- **Parameters**:
+  - `element_size`: Size of each element in bytes.
+  - `capacity`: Initial capacity of the array.
+- **Returns**: A pointer to the initialized `DynamicArray`.
+
+### `void resizeArray(DynamicArray *array, size_t new_capacity)`
+
+Resizes the dynamic array to a new capacity.
+
+- **Parameters**:
+  - `array`: A pointer to the `DynamicArray` to be resized.
+  - `new_capacity`: The new capacity for the array.
+
+### `void addElement(DynamicArray *array, void *element)`
+
+Adds an element to the dynamic array. Resizes the array if necessary.
+
+- **Parameters**:
+  - `array`: A pointer to the `DynamicArray`.
+  - `element`: A pointer to the element to be added.
+
+### `void removeElement(DynamicArray *array, size_t index)`
+
+Removes an element from the dynamic array at the specified index.
+
+- **Parameters**:
+  - `array`: A pointer to the `DynamicArray`.
+  - `index`: The index of the element to be removed.
+
+### `void destroyArray(DynamicArray *array)`
+
+Destroys the dynamic array, freeing all allocated memory.
+
+- **Parameters**:
+  - `array`: A pointer to the `DynamicArray` to be destroyed.
