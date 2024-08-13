@@ -53,13 +53,13 @@ char* substring(char* str, int start, int substrLength, int originalStrLength) {
         substrLength = originalStrLength - start;
     }
 
-    char* substr = malloc(substrLength * sizeof(char) + 1);
+    char* substr = malloc((substrLength + 1) * sizeof(char));
     if(substr == NULL) {
         printf("Memory allocation failed!!\n");
         return NULL;
     }
 
-    for(int i=0; i<substrLength; ++i) {
+    for(int i = 0; i < substrLength; ++i) {
         substr[i] = str[start + i];
     }
     substr[substrLength] = '\0';
@@ -78,7 +78,20 @@ int main() {
 
         int start, substrLength;
         printf("Enter substring start position and substring length: ");
-        scanf("%d%d", &start, &substrLength);
+        if(scanf("%d%d", &start, &substrLength) != 2) {
+            printf("Invalid range inputs!!\n");
+            free(inputString);
+            return 1;
+        }
+        
+        /* 
+        Clear the input buffer to prevent any leftover characters (e.g., '\n') from interfering with subsequent input operations.
+        This loop reads and discards all characters in the input buffer until it encounters a newline character '\n'. The newline 
+        character is often left behind by scanf() after reading numeric input, and without this step, it could cause the next 
+        input function (like getchar() or fgets()) to behave unexpectedly by reading this leftover newline instead of waiting 
+        for new input.
+        */
+        while(getchar() != '\n');
 
         char* substr = substring(inputString, start, substrLength, length);
 
@@ -87,9 +100,7 @@ int main() {
             free(substr);
         }
 
-        if(inputString != NULL) {
-            free(inputString);
-        }
+        free(inputString);  // No need to check if inputString is NULL, free(NULL) is safe
     }
 
     return 0;
