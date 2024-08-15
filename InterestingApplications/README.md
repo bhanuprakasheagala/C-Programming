@@ -209,37 +209,61 @@ char* customStrtok(char* str, const char* delimiters);
 - **Return Value**:
   - The function returns a pointer to the next token found in the string. If no more tokens are available, it returns `NULL`.
 
-## How It Works Internally
+### How It Works Internally
 
-`customStrtok` operates similarly to the standard `strtok` function but with a few key differences and improvements:
+The `strtok` function in C is designed to tokenize a string by breaking it into smaller, manageable pieces called tokens. These tokens are separated by one or more characters known as delimiters. Understanding the internal workings of `strtok` involves delving into how it manages the state between function calls and how it processes the input string.
 
-1. **Initial Call**: When `customStrtok` is first called, it initializes a static pointer to keep track of the current position in the string.
-2. **Skipping Delimiters**: The function uses `strspn` to skip over any leading delimiters, moving the pointer to the start of the next token.
-3. **Token Identification**: `strcspn` is used to locate the next delimiter, marking the end of the current token.
-4. **Null-Termination**: The delimiter is replaced with a null terminator (`\0`) to end the current token.
-5. **State Update**: The static pointer is updated to point just after the null terminator, ready for the next call to `customStrtok`.
-6. **Subsequent Calls**: The function continues tokenizing the string based on the updated pointer until no more tokens are found, at which point it returns `NULL`.
+#### 1. Stateful Function
 
-### Internal Process Illustration
+- **Static Pointer**: The key to `strtok`'s operation is its use of a static pointer, which persists between calls to the function. This static pointer remembers where the last token ended so that the next call to `strtok` can continue from that position.
 
-```text
-Input String:  "Hello, world! This is a test."
-Delimiters:    " ,.!?"
+- **First Call vs. Subsequent Calls**:
+  - On the **first call**, `strtok` takes the string to be tokenized as its first argument. It initializes the static pointer to point to the beginning of the string and starts scanning for the first token.
+  - On **subsequent calls**, the string argument is passed as `NULL`, which tells `strtok` to continue tokenizing from where it left off (i.e., using the static pointer's current position).
 
-Iteration 1:
-  Token: "Hello"
-  Next Start: "world! This is a test."
+#### 2. Skipping Leading Delimiters
 
-Iteration 2:
-  Token: "world"
-  Next Start: "This is a test."
+- **strspn Functionality**: `strtok` uses a function like `strspn` internally to skip over any leading characters in the string that match any of the delimiter characters. This ensures that the tokenization starts at the first non-delimiter character.
 
-...
+#### 3. Identifying and Terminating Tokens
 
-Iteration 5:
-  Token: "test"
-  Next Start: NULL (No more tokens)
-```
+- **strcspn Functionality**: Once `strtok` finds the start of a token, it uses a function like `strcspn` to find the next delimiter in the string, marking the end of the token.
+
+- **Null-Termination**:
+  - When `strtok` finds a delimiter, it replaces the delimiter with a null terminator (`\0`). This effectively ends the current token and allows the token to be treated as a standalone string.
+  - After inserting the null terminator, `strtok` updates the static pointer to the character immediately following the delimiter, ready for the next tokenization call.
+
+#### 4. Returning the Token
+
+- **Return Value**: `strtok` returns a pointer to the start of the current token (i.e., where it began scanning after skipping delimiters). If no more tokens are found, the function returns `NULL`.
+
+#### 5. Edge Cases
+
+- **Consecutive Delimiters**: If delimiters are consecutive (e.g., `,,`), `strtok` will skip over them until it finds a non-delimiter character or reaches the end of the string.
+- **End of String**: If `strtok` reaches the end of the string and no more tokens are available, the static pointer is set to `NULL`, and subsequent calls return `NULL` as well.
+
+#### 6. Non-Reentrant Nature
+
+- **Non-Reentrant**: `strtok` is not thread-safe or reentrant because it uses a static variable to maintain state between calls. This means that if `strtok` is used on different strings simultaneously (e.g., in a multi-threaded environment), it will fail to function correctly, as the static pointer will be shared across all calls.
+
+### Example of Internal Process
+
+Consider the string `"Hello, world! This is a test."` with delimiters `", !"`. Here’s how `strtok` would process it internally:
+
+1. **First Call**: 
+   - Input: `"Hello, world! This is a test."`, Delimiters: `", !"`
+   - Skips leading delimiters (none in this case).
+   - Finds "Hello" as the first token, replaces the comma after "Hello" with `\0`, and sets the static pointer to `" world! This is a test."`.
+   - Returns `"Hello"`.
+
+2. **Second Call**:
+   - Input: `NULL`, Delimiters: `", !"`
+   - Continues from `" world! This is a test."`.
+   - Skips leading space.
+   - Finds "world" as the next token, replaces the exclamation mark after "world" with `\0`, and updates the pointer to `" This is a test."`.
+   - Returns `"world"`.
+
+3. **Subsequent Calls**: The process continues until all tokens are extracted or the end of the string is reached, at which point `strtok` returns `NULL`.
 
 ## Example Usage
 
