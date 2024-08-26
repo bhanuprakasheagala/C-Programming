@@ -1,4 +1,4 @@
-# 1. Custom Substring Extraction in C (`substring`)
+# 1. Custom Substring Extraction (`substring`)
 
 This is an implementation of a custom substring extraction function in C, named `substring`. The purpose of this project is to practice string manipulation, memory management, and pointer arithmetic in C by implementing a function that extracts a portion of a string based on a specified start position and length.
 
@@ -172,7 +172,7 @@ The `substring` function can be used in various scenarios, including:
 - **String Manipulation**: Implementing custom string processing algorithms.
 
 
-# 2. Custom String Tokenizer in C (`customStrtok`)
+# 2. Custom String Tokenizer (`customStrtok`)
 
 This is an implementation of a custom string tokenizer function in C, named `customStrtok`, which mimics the behavior of the standard `strtok` function. The purpose of this project is to dive into string manipulation, pointer arithmetic, and state management in C.
 
@@ -336,3 +336,211 @@ The `customStrtok` function can be used in various scenarios where string parsin
 - **Parsing Command-Line Arguments**: Breaking down command-line inputs into individual arguments.
 - **CSV Parsing**: Splitting a CSV string into individual fields.
 - **Log Processing**: Tokenizing log entries for further analysis.
+
+
+# 3. String Compression Function
+
+#### Problem Statement
+
+The goal is to implement a function `char* compressString(char* str)` in C that compresses a string by replacing sequences of the same character with the character followed by the count of its repetitions. For example, the string `"aaabbc"` should be compressed to `"a3b2c1"`. However, if the compressed string is not shorter than the original string, the function should return the original string.
+
+### Step-by-Step Implementation
+
+#### 1. Analyze the Input String
+
+- The function needs to traverse the input string to identify sequences of consecutive characters.
+- It must count the number of repetitions for each character.
+
+#### 2. Build the Compressed String
+
+- While traversing, the function should build a new string that contains the character followed by its count.
+- The length of the new string should be tracked to determine if it is shorter than the original string.
+
+#### 3. Handle Memory Allocation
+
+- Since strings in C are dynamically allocated, you need to ensure enough space for the compressed string. The maximum possible length for the compressed string is roughly twice the length of the original string (if every character is unique and followed by "1").
+- Use `malloc` to allocate memory for the compressed string and `free` to release it when no longer needed.
+
+#### 4. Compare Lengths and Return the Result
+
+- If the compressed string is shorter, return it.
+- Otherwise, free the allocated memory for the compressed string and return the original string.
+
+### Example Pseudocode
+
+```c
+char* compressString(char* str) {
+    // Calculate the length of the original string
+    int originalLength = strlen(str);
+    
+    // Allocate memory for the compressed string
+    char* compressed = malloc((2 * originalLength + 1) * sizeof(char));
+    if (compressed == NULL) {
+        printf("Memory allocation failed!\n");
+        return NULL;
+    }
+
+    int count = 1;
+    int index = 0;
+    
+    // Traverse the string and build the compressed version
+    for (int i = 0; i < originalLength; i++) {
+        if (str[i] == str[i + 1]) {
+            count++;
+        } else {
+            compressed[index++] = str[i];
+            index += sprintf(&compressed[index], "%d", count);
+            count = 1;
+        }
+    }
+    
+    compressed[index] = '\0';
+
+    // Compare the lengths of the compressed and original strings
+    if (strlen(compressed) >= originalLength) {
+        free(compressed);
+        return str;
+    } else {
+        return compressed;
+    }
+}
+```
+
+### Edge Cases
+
+- **Single Character Strings**: Input strings like `"a"` or `"bb"` should simply return `"a1"` or `"b2"`, respectively.
+- **Empty Strings**: Handle the case where the input string is empty.
+- **Memory Allocation Failures**: Always check if `malloc` returns `NULL` and handle this gracefully.
+
+---
+
+### GitHub README for String Compression
+
+Below is a sample README for your `compressString` function.
+
+---
+
+# 3. String Compression in C (`compressString`)
+
+This repository contains an implementation of a string compression function in C, named `compressString`. The function compresses a string by replacing sequences of the same character with the character followed by the count of repetitions. If the compressed string is not shorter than the original, the function returns the original string.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Concepts Covered](#concepts-covered)
+- [Function Syntax](#function-syntax)
+- [How It Works](#how-it-works)
+- [Example Usage](#example-usage)
+- [Applications](#applications)
+  
+## Introduction
+
+String compression is a common problem in data processing and compression algorithms. This function provides a simple yet effective way to compress strings by counting repeated characters. The goal is to demonstrate how to manipulate strings, manage memory, and optimize performance in C.
+
+## Concepts Covered
+
+- **String Manipulation**: Techniques for modifying and analyzing strings in C.
+- **Memory Management**: Efficient use of `malloc`, `free`, and dynamic memory allocation.
+- **Optimization**: Balancing compression effectiveness with performance and memory usage.
+
+## Function Syntax
+
+```c
+char* compressString(char* str);
+```
+
+- **Parameters**:
+  - `str`: The input string to be compressed.
+
+- **Return Value**:
+  - The function returns a pointer to the compressed string if it is shorter than the original string. Otherwise, it returns the original string.
+
+## How It Works
+
+The `compressString` function works by:
+
+1. **Counting Repeated Characters**: As the function traverses the string, it counts the occurrences of each character until it encounters a different character.
+2. **Building the Compressed String**: For each sequence of repeated characters, the function appends the character and its count to the new string.
+3. **Memory Allocation**: The function allocates memory for the compressed string dynamically, ensuring enough space to store the potential output.
+4. **Length Comparison**: After building the compressed string, the function compares its length to the original string. If the compressed version is not shorter, the function frees the allocated memory and returns the original string.
+
+### Internal Process Illustration
+
+```text
+Original String:  "aaabbc"
+Steps:
+  1. Count 'a' -> 3 times
+  2. Append "a3" to compressed string
+  3. Count 'b' -> 2 times
+  4. Append "b2" to compressed string
+  5. Count 'c' -> 1 time
+  6. Append "c1" to compressed string
+
+Final Compressed String: "a3b2c1"
+```
+
+## Example Usage
+
+Here are some code snippets demonstrating how to use the `compressString` function:
+
+### Basic Compression
+
+```c
+#include <stdio.h>
+#include "compressString.h"
+
+int main() {
+    char input[] = "aaabbc";
+    
+    char* compressed = compressString(input);
+
+    if (compressed != NULL) {
+        printf("Compressed string: %s\n", compressed);
+        if (compressed != input) {
+            free(compressed);  // Free the memory if a new string was allocated
+        }
+    }
+
+    return 0;
+}
+```
+
+**Output:**
+
+```
+Compressed string: a3b2c1
+```
+
+### Handling Non-Compressible Strings
+
+```c
+#include <stdio.h>
+#include "compressString.h"
+
+int main() {
+    char input[] = "abcdef";
+    
+    char* compressed = compressString(input);
+
+    if (compressed != NULL) {
+        printf("Compressed string: %s\n", compressed);
+        // Since compressed == input, no need to free
+    }
+
+    return 0;
+}
+```
+
+**Output:**
+
+```
+Compressed string: abcdef
+```
+
+## Applications
+
+The `compressString` function can be applied in:
+
+- **Data Compression**: Reducing the size of repetitive text data.
+- **Log File Optimization**: Compressing logs or repetitive textual data to save space.
+- **Text Processing**: Preprocessing strings for pattern matching or analysis.
