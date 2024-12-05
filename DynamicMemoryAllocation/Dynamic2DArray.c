@@ -6,11 +6,11 @@ int main() {
     int rows = 3, cols = 4;
 
     // Step 1: Allocate memory for an array of pointers
-    int **arr = (int**)malloc(rows * sizeof(int*));
+    int **array = (int**)malloc(rows * sizeof(int*));
 
     // Step 2: Allocate memory for each row
     for(int i=0; i<rows; ++i) {
-        arr[i] = (int*)malloc(cols * sizeof(int));
+        array[i] = (int*)malloc(cols * sizeof(int));
     }
 
     // Initialize the array and print it
