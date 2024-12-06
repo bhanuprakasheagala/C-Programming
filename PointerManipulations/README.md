@@ -408,3 +408,139 @@ Most compilers would allow this because you're dereferencing `ptr`, but modifyin
 ```
 10
 ```
+----------------------------------------------------------------------------------------------------------------------------
+## Few Questions on How it works basis
+### 1. **Pointer Arithmetic (Incrementing a Pointer)**
+
+#### **Basic Concept**:
+Pointer arithmetic allows you to move pointers across arrays. For example:
+```c
+int arr[] = {1, 2, 3};
+int *ptr = arr;
+ptr++; // Now ptr points to arr[1]
+```
+
+#### **Follow-up Questions**:
+- **Q1**: How does `ptr++` work? How does the compiler know the size of the data type that the pointer is pointing to?
+    - **Under the hood**: The `ptr++` operation increments the pointer by the size of the type it points to. The compiler automatically calculates this size using `sizeof`. For an `int*`, the pointer moves by `sizeof(int)` (typically 4 bytes). Essentially, `ptr++` is equivalent to `ptr = ptr + 1`, where the `1` is multiplied by the size of `int` before the pointer is updated.
+  
+- **Q2**: What happens when we increment a pointer that is pointing to an element in an array? Does it wrap around when it exceeds the array size?
+    - **Under the hood**: If the pointer goes beyond the allocated space (i.e., past the end of the array), it results in undefined behavior. A pointer can technically point to any memory location (valid or invalid), and dereferencing it past the array's bounds is illegal. The pointer itself does not "wrap around," but accessing the memory past the array is dangerous.
+
+---
+
+### 2. **Array Decay to Pointer**
+
+#### **Basic Concept**:
+When you pass an array to a function, it decays to a pointer to the first element:
+```c
+void foo(int arr[]) { 
+    // arr is now a pointer to the first element
+}
+```
+
+#### **Follow-up Questions**:
+- **Q1**: Why is it that arrays decay to pointers when passed to functions, but in some cases, the size information is lost?
+    - **Under the hood**: The array name is actually a constant pointer to the first element of the array. When an array is passed to a function, its size information is not passed because only the address of the first element is passed. Therefore, the function has no direct way to know the array’s size unless explicitly passed or calculated.
+  
+- **Q2**: If you pass an array to a function, why does the compiler not allow you to change the address of the passed array inside the function (i.e., why can't you modify the pointer itself)?
+    - **Under the hood**: The array decays to a pointer, but the pointer itself cannot be reassigned inside the function. This is because the address passed is a copy, not the original reference. Modifying the pointer will change the local copy, but not the original address in the caller’s scope. 
+
+---
+
+### 3. **Memory Layout: Stack vs Heap**
+
+#### **Basic Concept**:
+Variables can be allocated on the stack or heap:
+```c
+int x; // stack allocation
+int* ptr = (int*)malloc(sizeof(int)); // heap allocation
+```
+
+#### **Follow-up Questions**:
+- **Q1**: What exactly happens when `malloc` is called? How does it allocate memory on the heap?
+    - **Under the hood**: The `malloc` function requests memory from the operating system. The operating system maintains a memory pool for dynamic allocation (heap). When `malloc` is called, it finds an unallocated block of memory of the requested size and returns its address. The memory is not initialized, so the content of that memory is unknown until you explicitly write to it.
+  
+- **Q2**: Why is the stack limited in size compared to the heap, and what happens when you exceed the stack size?
+    - **Under the hood**: The stack is a region of memory used for function calls, local variables, and function return addresses. It grows and shrinks as functions are called and return. The heap, however, is a larger, dynamically allocated region of memory that can grow based on the system's available resources. If you exceed the stack size (e.g., through deep recursion or allocating large local arrays), a **stack overflow** occurs, which results in a crash or undefined behavior.
+
+---
+
+### 4. **Const Pointers and Pointer to Const**
+
+#### **Basic Concept**:
+```c
+const int *ptr = &x;  // pointer to constant value
+int * const ptr = &x; // constant pointer to an int
+```
+
+#### **Follow-up Questions**:
+- **Q1**: Can you change the pointer itself if it’s a constant pointer (`int * const ptr`)?
+    - **Under the hood**: The pointer itself cannot be reassigned because it’s a constant pointer (`const` applies to the pointer, not the value it points to). However, you can modify the value that the pointer points to as long as it's not `const`. In contrast, for `const int *ptr`, you can change the pointer but not the value it points to.
+  
+- **Q2**: What is the actual difference between `const int *ptr` and `int * const ptr` in terms of memory behavior?
+    - **Under the hood**: `const int *ptr` means that the data being pointed to is constant, and trying to modify it through `ptr` would result in a compiler error. `int * const ptr` means that the pointer itself is constant and cannot point to another address, but the value at the address it points to can be changed.
+
+---
+
+### 5. **Dangling Pointer**
+
+#### **Basic Concept**:
+A dangling pointer occurs when a pointer continues to reference a memory location after it has been freed.
+
+```c
+int *ptr = (int *)malloc(sizeof(int));
+free(ptr);
+// Now ptr is a dangling pointer
+```
+
+#### **Follow-up Questions**:
+- **Q1**: What exactly happens under the hood when you call `free()` on a pointer? How does the system know the memory is available for reuse?
+    - **Under the hood**: The `free()` function tells the memory allocator to mark the memory as available for reuse. The memory allocator maintains a pool of free blocks (usually organized in a linked list or a similar structure). When you call `free(ptr)`, it puts the block back into this pool. However, after freeing, the pointer `ptr` still contains the address of the memory that was just released, which is now invalid (dangling). Dereferencing this pointer leads to undefined behavior.
+  
+- **Q2**: Why is it dangerous to use a dangling pointer even if you don't dereference it? What kind of issues could arise?
+    - **Under the hood**: Even if you don't dereference a dangling pointer, using it (e.g., in a comparison or as an argument to a function) could lead to undefined behavior. This is because memory allocated by `malloc` or other allocators can be reused or overwritten by subsequent allocations. If you pass a dangling pointer into a function that uses it, it may end up accessing a completely different memory area that was allocated for another purpose, causing unexpected behavior or corruption.
+
+---
+
+### 6. **Pointer to Struct**
+
+#### **Basic Concept**:
+Pointers to structures allow direct manipulation of structure fields.
+```c
+struct Point {
+    int x;
+    int y;
+};
+struct Point p = {10, 20};
+struct Point *ptr = &p;
+printf("%d", ptr->x);  // Prints 10
+```
+
+#### **Follow-up Questions**:
+- **Q1**: What is the difference between using `ptr->x` and `(*ptr).x` when accessing a struct member?
+    - **Under the hood**: Both `ptr->x` and `(*ptr).x` are equivalent. The syntax `ptr->x` is just a shorthand for `(*ptr).x`, where `ptr` is dereferenced and the member `x` is accessed. Internally, both expressions involve dereferencing the pointer and accessing the structure member.
+
+- **Q2**: How does the compiler optimize memory access when using pointers to struct members (e.g., `ptr->x`)? Is there any overhead involved in using pointers with structures?
+    - **Under the hood**: The compiler does not introduce significant overhead for using pointers to structures. When you access `ptr->x`, the pointer is dereferenced (which is essentially a simple memory access), and the value of `x` is retrieved. The main concern is that accessing members through pointers can sometimes lead to less efficient code, especially in tight loops, because of the potential indirection (though modern compilers often optimize these access patterns).
+
+---
+
+### 7. **Pointer Casting**
+
+#### **Basic Concept**:
+Casting a pointer between different types:
+```c
+int x = 10;
+void *ptr = &x;
+int *intPtr = (int *)ptr;
+```
+
+#### **Follow-up Questions**:
+- **Q1**: What happens when you cast a `void*` to another pointer type? How does the compiler ensure the proper size of the data type being pointed to?
+    - **Under the hood**: When casting a `void*` to another pointer type (like `int*`), the compiler uses `sizeof` the target type to adjust the pointer. For example, `void *` is a pointer to an unknown type, but when you cast it to `int*`, the compiler treats it as a pointer to an `int
+
+` and applies the appropriate offset based on the size of `int`.
+  
+- **Q2**: What can go wrong when casting pointers between incompatible types?
+    - **Under the hood**: Casting pointers between incompatible types can lead to undefined behavior. For instance, casting a pointer to a `char*` (which typically holds 1 byte) to an `int*` (which typically holds 4 bytes) may result in misaligned accesses, causing runtime errors on some architectures (especially when the platform requires stricter alignment).
