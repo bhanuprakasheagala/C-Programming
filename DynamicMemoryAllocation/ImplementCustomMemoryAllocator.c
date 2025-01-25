@@ -28,6 +28,9 @@ void* my_malloc(size_t size) {
 }
 
 void my_free(void* ptr, size_t size) {
+    if(!ptr) {
+        return;
+    }
     int index = (char*)ptr - memory_chunk;
     for(int i = 0; i < size; ++i) {
         allocated[index + i] = false;
@@ -36,12 +39,20 @@ void my_free(void* ptr, size_t size) {
 
 int main() {
     void* block1 = my_malloc(100);
-    void* block2 = my_malloc(200);
+    if(!block1) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
 
+    void* block2 = my_malloc(200);
+    if(!block2) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
     printf("Allocated blocks at %p and %p\n", block1, block2);
 
     my_free(block1, 100);
     my_free(block2, 200);
-    
+
     return 0;
 }
